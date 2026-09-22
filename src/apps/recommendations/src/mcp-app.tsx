@@ -1,12 +1,13 @@
-import type {
-  McpUiHostContextChangedNotification,
-  McpUiToolResultNotification,
-} from '@modelcontextprotocol/ext-apps';
-import { applyDocumentTheme, useApp } from '@modelcontextprotocol/ext-apps/react';
+import type { McpUiToolResultNotification } from '@modelcontextprotocol/ext-apps';
+import { useApp, useHostStyles } from '@modelcontextprotocol/ext-apps/react';
 import { MapPin, Star, Thermometer } from 'lucide-react';
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import type { Destination, DestinationSearchResult } from '../../../toolkits/recommendations/types.ts';
+import { LoadingState } from '../../components/loading-state.tsx';
+import { UdsThemeBridge } from '../../components/uds-theme-bridge.tsx';
+import { Alert, AlertDescription } from '../../components/ui/alert.tsx';
 import { Badge } from '../../components/ui/badge.tsx';
 import { Button } from '../../components/ui/button.tsx';
 import {
@@ -17,8 +18,6 @@ import {
   CardHeader,
   CardTitle,
 } from '../../components/ui/card.tsx';
-import { SpinnerPage } from '../../components/ui/spinner.tsx';
-import type { Destination, DestinationSearchResult } from '../../../toolkits/recommendations/types.ts';
 import '../../global.css';
 
 function addDays(days: number): string {
@@ -29,7 +28,7 @@ function addDays(days: number): string {
 
 function RatingStars({ rating }: { rating: number }) {
   return (
-    <span className="flex items-center gap-1 text-amber-500">
+    <span className="flex items-center gap-1 text-star">
       <Star className="h-3.5 w-3.5 fill-current" />
       <span className="text-sm font-medium text-foreground">{rating.toFixed(1)}</span>
     </span>
@@ -51,8 +50,7 @@ function DestinationCard({
   }
 
   return (
-    <Card className="flex flex-col overflow-hidden transition-shadow hover:shadow-md">
-      <div className="h-1.5 w-full bg-primary" />
+    <Card className="flex flex-col transition-colors hover:bg-muted/40">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -92,7 +90,7 @@ function DestinationCard({
           </span>
           <span className="text-xs text-muted-foreground ml-1">/night avg</span>
         </div>
-        <Button size="sm" disabled={loading} onClick={handleBook}>
+        <Button className="travel0-action travel0-card-action travel0-action-primary" disabled={loading} onClick={handleBook}>
           {loading ? 'Loading…' : 'Book now'}
         </Button>
       </CardFooter>
@@ -108,12 +106,6 @@ function App() {
     appInfo: { name: 'recommendations', version: '1.0.0' },
     capabilities: {},
     onAppCreated: (a) => {
-      a.onhostcontextchanged = (
-        notification: McpUiHostContextChangedNotification['params'],
-      ) => {
-        if (notification.theme) applyDocumentTheme(notification.theme);
-      };
-
       a.ontoolresult = (params: McpUiToolResultNotification['params']) => {
         const data = params.structuredContent as DestinationSearchResult | undefined;
         if (!data?.destinations) {
@@ -124,6 +116,7 @@ function App() {
       };
     },
   });
+  useHostStyles(app, app?.getHostContext());
 
   async function handleBook(destination: Destination) {
     if (!app) return;
@@ -142,37 +135,25 @@ function App() {
   }
 
   if (error) {
-    return (
-      <div className="flex h-full items-center justify-center p-6">
-        <p className="text-sm text-destructive">Connection error: {error.message}</p>
-      </div>
-    );
+    return <div className="p-4"><Alert variant="destructive"><AlertDescription>Connection error: {error.message}</AlertDescription></Alert></div>;
   }
 
   if (!isConnected || destinations === null) {
-    return <SpinnerPage />;
+    return <div className="bg-page p-4"><LoadingState label="Loading recommendations" /></div>;
   }
 
   if (loadError) {
-    return (
-      <div className="flex h-full items-center justify-center p-6">
-        <p className="text-sm text-destructive">{loadError}</p>
-      </div>
-    );
+    return <div className="p-4"><Alert variant="destructive"><AlertDescription>{loadError}</AlertDescription></Alert></div>;
   }
 
   if (destinations.length === 0) {
-    return (
-      <div className="flex h-full items-center justify-center p-6">
-        <p className="text-sm text-muted-foreground">No destinations found for your search.</p>
-      </div>
-    );
+    return <div className="bg-page p-4"><Card className="items-center p-6 text-center"><p className="text-sm text-muted-foreground">No destinations found for your search.</p></Card></div>;
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-5 rounded-4xl bg-page p-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-foreground">
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">
           {destinations.length} destination{destinations.length === 1 ? '' : 's'} found
         </h2>
       </div>
@@ -185,4 +166,9 @@ function App() {
   );
 }
 
-createRoot(document.getElementById('root')!).render(<App />);
+createRoot(document.getElementById('root')!).render(
+  <div className="auth0-universal" data-theme="minimal">
+    <UdsThemeBridge />
+    <App />
+  </div>,
+);

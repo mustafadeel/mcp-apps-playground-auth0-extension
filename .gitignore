@@ -9,3 +9,4 @@ docs/mcp-ui-debug-report.md
 scripts/diagnose-mcp-ui.mjs
 scripts/diagnose-mcp-ui.test.mjs
 src/apps/travel-history/src/state.test.ts
+docs/travel0-agentic-ui-demo-context.md

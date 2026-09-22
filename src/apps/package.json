@@ -9,6 +9,8 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@auth0/universal-components-core": "^3.4.0",
+    "@base-ui/react": "^1.8.0",
     "@modelcontextprotocol/ext-apps": "^2.0.0",
     "@radix-ui/react-dialog": "^1.1.23",
     "@radix-ui/react-scroll-area": "^1.2.18",
@@ -19,6 +21,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.46.0",
+    "radix-ui": "^1.6.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.7.0",

@@ -12,6 +12,7 @@ import createMcpPlugin from './plugins/mcp.ts';
 import { registerAuth0FormsTools } from './toolkits/auth0-forms/index.ts';
 import { listTenantForms, type TenantForm } from './toolkits/auth0-forms/tenant-forms.ts';
 import { registerBookingsTools } from './toolkits/bookings/index.ts';
+import { registerConnectedAccountsTools } from './toolkits/connected-accounts/index.ts';
 import { registerHistoryTools } from './toolkits/history/index.ts';
 import { registerRecommendationsTools } from './toolkits/recommendations/index.ts';
 
@@ -61,6 +62,7 @@ export async function buildServer(
     registerRecommendationsTools(mcpServer);
     registerHistoryTools(mcpServer);
     registerBookingsTools(mcpServer);
+    registerConnectedAccountsTools(mcpServer);
 
     // The factory executes after the MCP bearer token has been verified and
     // is request-scoped by the SDK. Forms are read only for callers that can
