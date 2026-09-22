@@ -30,13 +30,13 @@ type CalendarResult = {
 const CONNECTION_POLL_INTERVAL_MS = 2_000;
 const CONNECTION_POLL_MAX_ATTEMPTS = 150;
 
-function resultErrorMessage(result: { content?: unknown }): string {
+function resultErrorMessage(result: { content?: unknown }, fallback: string): string {
   const content = result.content;
-  if (!Array.isArray(content)) return 'Unable to add this itinerary to Google Calendar.';
+  if (!Array.isArray(content)) return fallback;
   const text = content.find((item) => typeof item === 'object' && item !== null && 'text' in item);
   return typeof text === 'object' && text !== null && typeof text.text === 'string'
     ? text.text
-    : 'Unable to add this itinerary to Google Calendar.';
+    : fallback;
 }
 
 function sortOptions(options: TripOption[], key: SortKey): TripOption[] {
@@ -281,14 +281,16 @@ function App() {
       });
       const nextConfirmation = result.structuredContent as BookingConfirmation | undefined;
       if (result.isError || !nextConfirmation?.bookingId || nextConfirmation.status !== 'confirmed') {
-        throw new Error(resultErrorMessage(result));
+        throw new Error(resultErrorMessage(result, 'Unable to confirm this booking.'));
       }
       setCalendarError(null);
       setCalendarState('idle');
       setConfirmation(nextConfirmation);
       setView('confirmed');
     } catch (err) {
+      setConfirmation(null);
       setBookingError(err instanceof Error ? err.message : String(err));
+      setView('results');
     } finally {
       setBooking(false);
     }
@@ -343,7 +345,7 @@ function App() {
         throw new Error('Google account connection timed out. Try again when you have completed the connection.');
       }
       if (result.isError || finalData?.status !== 'added') {
-        throw new Error(resultErrorMessage(result));
+        throw new Error(resultErrorMessage(result, 'Unable to add this itinerary to Google Calendar.'));
       }
       setCalendarState('added');
     } catch (caughtError) {

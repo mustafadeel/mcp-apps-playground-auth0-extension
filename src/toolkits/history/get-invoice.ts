@@ -6,6 +6,8 @@ import { withRequiredAuth } from '../../server/scopes.ts';
 import type { Invoice } from './types.ts';
 import { getTravelBaseUrl } from './urls.ts';
 
+const APP_ONLY = { ui: { visibility: ['app' as const] } };
+
 export function registerGetInvoice(server: McpServer): void {
   const schema = z.object({
     bookingId: z.string().min(1).describe('Booking ID, e.g. BK-2026-0038'),
@@ -16,6 +18,7 @@ export function registerGetInvoice(server: McpServer): void {
     {
       description: 'Fetches the full invoice for a booking, including all line items and payment details.',
       inputSchema: schema,
+      _meta: APP_ONLY,
     },
     withRequiredAuth(
       { scopes: 'read:bookings' },
