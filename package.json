@@ -34,7 +34,8 @@
     "build:extension": "rimraf dist build/bundle.js && node scripts/validate-manifest.mjs && esbuild src/webtask.ts --bundle --platform=node --format=cjs --target=node22 --loader:.html=text --external:edge --external:superagent-proxy --outfile=dist/extension.js && mkdir -p build && cp dist/extension.js build/bundle.js && node scripts/create-extension-package.mjs && zip -j -q dist/package.zip dist/extension.js dist/package.json",
     "build": "npm run build:apps && npm run build:extension",
     "smoke": "node scripts/smoke.mjs",
-    "test": "npm run typecheck && npm run build && npm run smoke"
+    "test:forms-resource-meta": "node --experimental-strip-types --test scripts/forms-resource-meta.test.mjs",
+    "test": "npm run typecheck && npm run test:forms-resource-meta && npm run build && npm run smoke"
   },
   "dependencies": {
     "@auth0/auth0-api-js": "^1.6.1",
