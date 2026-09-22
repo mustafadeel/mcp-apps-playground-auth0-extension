@@ -15,9 +15,24 @@ The MCP client renders MCP Apps in sandboxed iframes. When `allow-same-origin` i
 
 This is not a CSP domain issue — adding entries to `frameDomains` or `connectDomains` does not help because the CORS rejection happens server-side at Stripe.
 
-## Resolution
+## Implemented metadata contract
 
-Set `_meta.ui.domain` to any non-empty string on the `registerAppResource` config. MCP Inspector's `app-origin-controller` detects this and serves the app from a dedicated listener (port 6278) with `allow-same-origin` in the sandbox, giving the document a real `http://localhost:6278` origin instead of `null`. Stripe's CORS checks pass.
+The Auth0 Forms resource now declares the following metadata in
+`src/toolkits/auth0-forms/index.ts`:
+
+- `domain: 'localhost'` requests a dedicated sandbox origin from compatible
+  hosts. MCP Inspector's `app-origin-controller` detects a non-empty domain and
+  serves the app from a dedicated listener (port 6278) with
+  `allow-same-origin`, giving the document a real origin instead of `null`.
+- `resourceDomains: ['https:', 'data:']` permits the dynamically injected
+  tenant Forms SDK and its HTTPS static dependencies.
+- `connectDomains: ['https:']` permits SDK HTTPS requests.
+- `frameDomains: ['https://js.stripe.com', 'https://*.stripe.com']` permits
+  Stripe Elements and related payment frames.
+
+The targeted CSP lists are necessary for restrictive hosts, but CSP alone does
+not alter iframe origin semantics. A host must honor the `domain` request and
+provide `allow-same-origin` for Stripe's CORS checks to pass.
 
 See [inspector#1862](https://github.com/modelcontextprotocol/inspector/issues/1862) and [inspector#2370](https://github.com/modelcontextprotocol/inspector/pull/2370).
 
