@@ -1,50 +1,42 @@
-import * as TabsPrimitive from '@radix-ui/react-tabs';
-import type { ComponentPropsWithoutRef } from 'react';
+"use client";
 
-import { cn } from '../../lib/utils.ts';
+import { Tabs as TabsPrimitive } from "radix-ui";
+import * as React from "react";
 
-const Tabs = TabsPrimitive.Root;
+import { cn } from "@/lib/utils";
 
-type TabsListProps = ComponentPropsWithoutRef<typeof TabsPrimitive.List>;
+function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Root>) {
+  return <TabsPrimitive.Root data-slot="tabs" className={cn("flex flex-col gap-2", className)} {...props} />;
+}
 
-function TabsList({ className, ...props }: TabsListProps) {
+function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
   return (
     <TabsPrimitive.List
+      data-slot="tabs-list"
       className={cn(
-        'bg-muted text-muted-foreground inline-flex h-9 items-center justify-center rounded-lg p-1',
-        className,
+        "bg-muted shadow-switch-resting text-muted-foreground inline-flex h-9 w-fit items-center justify-center gap-0.5 rounded-2xl p-0.5",
+        className
       )}
       {...props}
     />
   );
 }
 
-type TabsTriggerProps = ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>;
-
-function TabsTrigger({ className, ...props }: TabsTriggerProps) {
+function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   return (
     <TabsPrimitive.Trigger
+      data-slot="tabs-trigger"
       className={cn(
-        'ring-offset-background focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground inline-flex items-center justify-center rounded-md px-3 py-1 text-sm font-medium whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow',
-        className,
+        "data-[state=active]:bg-background hover:bg-accent/25 dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:bg-input text-foreground dark:text-muted-foreground data-[state=active]:shadow-bevel-sm inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-xl px-4 py-0.5 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        className
       )}
       {...props}
     />
   );
 }
 
-type TabsContentProps = ComponentPropsWithoutRef<typeof TabsPrimitive.Content>;
-
-function TabsContent({ className, ...props }: TabsContentProps) {
-  return (
-    <TabsPrimitive.Content
-      className={cn(
-        'ring-offset-background focus-visible:ring-ring mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
-        className,
-      )}
-      {...props}
-    />
-  );
+function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Content>) {
+  return <TabsPrimitive.Content data-slot="tabs-content" className={cn("flex-1 outline-none", className)} {...props} />;
 }
 
 export { Tabs, TabsList, TabsTrigger, TabsContent };

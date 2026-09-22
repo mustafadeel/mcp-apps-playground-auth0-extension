@@ -1,13 +1,11 @@
-import type {
-  McpUiToolResultNotification,
-  McpUiHostContextChangedNotification,
-} from '@modelcontextprotocol/ext-apps';
-import { useApp, applyDocumentTheme } from '@modelcontextprotocol/ext-apps/react';
+import type { McpUiToolResultNotification } from '@modelcontextprotocol/ext-apps';
+import { useApp, useHostStyles } from '@modelcontextprotocol/ext-apps/react';
 import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import styles from './mcp-app.module.css';
 import type { FormsToolOutput } from '../../../toolkits/auth0-forms/types.ts';
+import { UdsThemeBridge } from '../../components/uds-theme-bridge.tsx';
 import '../../global.css';
 
 declare global {
@@ -27,6 +25,36 @@ const FORM_SUCCESS_EVENT = 'af-submitForm-success';
 
 type FormsRuntimeData = FormsToolOutput & { contextJwt: string };
 
+function isStringRecord(value: unknown): value is Record<string, string> {
+  return typeof value === 'object'
+    && value !== null
+    && !Array.isArray(value)
+    && Object.values(value).every((field) => typeof field === 'string');
+}
+
+function parseFormsRuntimeData(params: McpUiToolResultNotification['params']): FormsRuntimeData | null {
+  if (params.isError) return null;
+
+  const data = params.structuredContent as Partial<FormsToolOutput> | undefined;
+  const resultMeta = (params as typeof params & { _meta?: { contextJwt?: unknown } })._meta;
+  const contextJwt = resultMeta?.contextJwt;
+
+  if (
+    !data
+    || typeof data.formId !== 'string'
+    || !data.formId.trim()
+    || !isStringRecord(data.prefill)
+    || !isStringRecord(data.trustedFields)
+    || typeof data.successMessage !== 'string'
+    || typeof contextJwt !== 'string'
+    || !contextJwt.trim()
+  ) {
+    return null;
+  }
+
+  return { ...data, contextJwt };
+}
+
 function App() {
   const [formData, setFormData] = useState<FormsRuntimeData | null>(null);
   const [sdkReady, setSdkReady] = useState(() => !!window.Auth0Forms);
@@ -40,25 +68,21 @@ function App() {
     onAppCreated: (app) => {
       app.onteardown = async () => ({});
 
-      app.onhostcontextchanged = (
-        notification: McpUiHostContextChangedNotification['params'],
-      ) => {
-        if (notification.theme) applyDocumentTheme(notification.theme);
-      };
-
       app.ontoolresult = (params: McpUiToolResultNotification['params']) => {
-        const data = params.structuredContent as FormsToolOutput | undefined;
-        const resultMeta = (params as typeof params & { _meta?: { contextJwt?: unknown } })._meta;
-        const contextJwt = resultMeta?.contextJwt;
-        if (!data || typeof contextJwt !== 'string') {
+        const data = parseFormsRuntimeData(params);
+        if (!data) {
+          embeddedFormKeyRef.current = null;
           setFormData(null);
           setEmbedError(true);
           return;
         }
-        setFormData({ ...data, contextJwt });
+
+        setEmbedError(false);
+        setFormData(data);
       };
     },
   });
+  useHostStyles(app, app?.getHostContext());
 
   // Track SDK readiness — the script is pre-injected in the HTML but loads async.
   useEffect(() => {
@@ -152,4 +176,9 @@ function App() {
   );
 }
 
-createRoot(document.getElementById('root')!).render(<App />);
+createRoot(document.getElementById('root')!).render(
+  <div className="auth0-universal" data-theme="minimal">
+    <UdsThemeBridge />
+    <App />
+  </div>,
+);

@@ -1,10 +1,10 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 
-import { getCallerToken } from '../../server/context.ts';
+import { getCallerUser } from '../../server/context.ts';
 import { withRequiredAuth } from '../../server/scopes.ts';
-import type { BookingConfirmation } from './types.ts';
-import { getTravelBaseUrl } from './urls.ts';
+import { createDemoBooking } from './booking-store.ts';
+import { findTripOption } from './quotes.ts';
 
 export function registerConfirmBooking(server: McpServer): void {
   const schema = z.object({
@@ -22,27 +22,23 @@ export function registerConfirmBooking(server: McpServer): void {
     withRequiredAuth(
       { scopes: 'bookings:write' },
       async (args: z.infer<typeof schema>) => {
-        let confirmation: BookingConfirmation;
-        try {
-          const res = await fetch(`${getTravelBaseUrl()}/bookings`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${getCallerToken()}`,
-            },
-            body: JSON.stringify(args),
-          });
-          if (!res.ok) throw new Error(`Travel API error: ${res.status} ${res.statusText}`);
-          confirmation = (await res.json()) as BookingConfirmation;
-        } catch (errorMessage) {
-          throw new Error(`Failed to confirm booking for trip "${args.tripId}": ${String(errorMessage)}`);
+        const trip = findTripOption(args.tripId);
+        if (!trip) {
+          throw new Error('The selected demo trip is no longer available. Return to the package list and choose another option.');
         }
+
+        const confirmation = createDemoBooking(
+          getCallerUser().sub,
+          trip,
+          args.leadPassengerName,
+          args.email,
+        );
 
         return {
           content: [
             {
               type: 'text' as const,
-              text: `Booking confirmed! Reference: **${confirmation.bookingId}**. ${confirmation.message}`,
+              text: `Demo booking confirmed. Reference: ${confirmation.bookingId}.`,
             },
           ],
           structuredContent: confirmation,

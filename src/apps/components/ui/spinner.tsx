@@ -1,44 +1,34 @@
-import { cn } from '../../lib/utils.ts';
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
+import * as React from "react";
 
-interface SpinnerProps {
-  className?: string;
-  size?: 'sm' | 'md' | 'lg';
-}
+import { cn } from "@/lib/utils";
 
-function Spinner({ className, size = 'md' }: SpinnerProps) {
-  const sizeClass = { sm: 'h-4 w-4', md: 'h-6 w-6', lg: 'h-8 w-8' }[size];
+const spinnerVariants = cva("text-surface inline-block h-8 w-8 rounded-full duration-[5000] ease-linear", {
+  variants: {
+    variant: {
+      dots: "border-primary animate-[spin_5s_linear_infinite] border-6 border-dotted",
+      pulse: "bg-primary animate-pulse",
+      solid: "border-primary animate-spin border-2 border-e-transparent",
+    },
+    size: {
+      sm: "size-4",
+      md: "size-8",
+      lg: "size-12",
+    },
+  },
+  defaultVariants: {
+    variant: "solid",
+    size: "md",
+  },
+});
+
+export interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof spinnerVariants> {}
+
+export function Spinner({ variant, size, className, ...props }: SpinnerProps) {
   return (
-    <svg
-      className={cn('animate-spin text-primary', sizeClass, className)}
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      aria-label="Loading"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-      />
-    </svg>
-  );
-}
-
-function SpinnerPage({ label }: { label?: string }) {
-  return (
-    <div className="flex h-full min-h-24 flex-col items-center justify-center gap-3 p-6">
-      <Spinner />
-      {label && <p className="text-xs text-muted-foreground">{label}</p>}
+    <div className={cn(spinnerVariants({ variant, size }), className)} {...props}>
+      <span className="sr-only">Loading...</span>
     </div>
   );
 }
-
-export { Spinner, SpinnerPage };

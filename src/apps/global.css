@@ -1,130 +1,137 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@import '@auth0/universal-components-core/styles/globals.css';
 
-@source "./**/*.{tsx,ts}";
+@source './**/*.{tsx,ts}';
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+/*
+ * UDS owns primitive implementation. Travel0 selects its documented minimal
+ * theme and only supplies supported tokens for a flat, payment-style surface.
+ */
+.auth0-universal[data-theme='minimal'] {
+  --auth0-background: #ffffff;
+  --auth0-foreground: #1a1a1a;
+  --auth0-card: #ffffff;
+  --auth0-card-foreground: #1a1a1a;
+  --auth0-primary: #4355e7;
+  --auth0-primary-foreground: #ffffff;
+  --auth0-secondary: #e9eaed;
+  --auth0-secondary-foreground: #1a1a1a;
+  --auth0-accent: #f1f2f4;
+  --auth0-accent-foreground: #1a1a1a;
+  --auth0-muted: #f7f7f8;
+  --auth0-muted-foreground: #6b6b6b;
+  --auth0-border: #a6a6a6;
+  --auth0-ring: #4355e7;
+  --auth0-popover: #ffffff;
+  --auth0-popover-foreground: #1a1a1a;
+  --auth0-input: #ffffff;
+  --color-page: #ffffff;
+
+  --shadow-bevel-xs: none;
+  --shadow-bevel-sm: none;
+  --shadow-bevel-md: none;
+  --shadow-bevel-lg: none;
+  --shadow-bevel-xl: none;
+  --shadow-bevel-2xl: none;
+  --shadow-button-resting: none;
+  --shadow-button-hover: none;
+  --shadow-button-destructive-resting: none;
+  --shadow-button-destructive-hover: none;
+  --shadow-button-outlined-resting: none;
+  --shadow-button-outlined-hover: none;
+  --shadow-input-resting: none;
+  --shadow-input-hover: none;
+  --shadow-input-destructive-resting: none;
+  --shadow-input-destructive-hover: none;
+  --shadow-input-destructive-focus: none;
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
+  --radius-2xl: 10px;
+  --radius-3xl: 12px;
+  --radius-4xl: 14px;
+  --radius-5xl: 16px;
+  --radius-6xl: 20px;
+  --radius-7xl: 24px;
+  --radius-8xl: 28px;
+  --radius-9xl: 32px;
+
+  color: var(--color-foreground);
+  background: var(--color-page);
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
 }
 
-:root {
-  color-scheme: light dark;
-  --radius: 0.625rem;
-
-  /* Booking.com-adjacent light palette */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.13 0.028 261.692);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.13 0.028 261.692);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.13 0.028 261.692);
-  --primary: oklch(0.32 0.115 261);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.96 0.004 264);
-  --secondary-foreground: oklch(0.13 0.028 261.692);
-  --muted: oklch(0.97 0.002 264);
-  --muted-foreground: oklch(0.55 0.02 264);
-  --accent: oklch(0.48 0.15 261);
-  --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.5 0.22 27);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.88 0.005 264);
-  --input: oklch(0.88 0.005 264);
-  --ring: oklch(0.48 0.15 261);
-  --success: oklch(0.52 0.14 144);
-  --success-foreground: oklch(1 0 0);
-  --warning: oklch(0.72 0.15 60);
-  --warning-foreground: oklch(0.15 0.02 60);
-
-  /*
-   * Fallbacks for MCP host style variables.
-   * The host may override these via the host context theme.
-   */
-  --color-text-primary: light-dark(#1f2937, #f3f4f6);
-  --color-text-inverse: light-dark(#f3f4f6, #1f2937);
-  --color-text-info: light-dark(#1d4ed8, #60a5fa);
-  --color-text-muted: light-dark(#6b7280, #9ca3af);
-  --color-text-danger: light-dark(#dc2626, #f87171);
-  --color-text-success: light-dark(#16a34a, #4ade80);
-  --color-text-warning: light-dark(#d97706, #fbbf24);
-  --color-background-primary: light-dark(#ffffff, #1a1a1a);
-  --color-background-secondary: light-dark(#f9fafb, #262626);
-  --color-background-info: light-dark(#eff6ff, #1e3a5f);
-  --color-border: light-dark(#e5e7eb, #374151);
-  --color-border-strong: light-dark(#d1d5db, #4b5563);
-  --color-ring-primary: light-dark(#3b82f6, #60a5fa);
-  --color-accent: #2563eb;
-  --color-text-on-accent: #ffffff;
-  --border-radius-md: 6px;
-  --border-width-regular: 1px;
-  --font-sans: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-    'Segoe UI Symbol', 'Noto Color Emoji';
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    'Courier New', monospace;
-  --font-weight-normal: 400;
-  --font-weight-bold: 700;
-  --font-text-sm-size: 0.875rem;
-  --font-text-sm-line-height: 1.25rem;
-  --font-text-md-size: 1rem;
-  --font-text-md-line-height: 1.5;
-  --font-heading-lg-size: 1.25rem;
-  --font-heading-lg-line-height: 1.75rem;
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
+/*
+ * Full-size Travel0 actions share one deliberate control tier. This composes
+ * the official UDS Button rather than changing the registry primitive, so
+ * tabs, compact ghost controls, and the embedded Forms SDK remain unaffected.
+ */
+.auth0-universal[data-theme='minimal'] .travel0-action {
+  max-inline-size: 100%;
+  min-inline-size: min(12.5rem, 100%);
+  min-height: 3rem;
+  padding-inline: 1.25rem;
+  border-radius: var(--radius-3xl);
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  transition-property: background-color, border-color, color, opacity;
 }
 
-.dark {
-  --background: oklch(0.13 0.028 261.692);
-  --foreground: oklch(0.97 0.002 264);
-  --card: oklch(0.18 0.025 261);
-  --card-foreground: oklch(0.97 0.002 264);
-  --popover: oklch(0.18 0.025 261);
-  --popover-foreground: oklch(0.97 0.002 264);
-  --primary: oklch(0.55 0.16 261);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.22 0.02 261);
-  --secondary-foreground: oklch(0.97 0.002 264);
-  --muted: oklch(0.22 0.02 261);
-  --muted-foreground: oklch(0.65 0.015 264);
-  --accent: oklch(0.55 0.16 261);
-  --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.6 0.22 27);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.28 0.02 261);
-  --input: oklch(0.28 0.02 261);
-  --ring: oklch(0.55 0.16 261);
-  --success: oklch(0.6 0.14 144);
-  --success-foreground: oklch(1 0 0);
-  --warning: oklch(0.8 0.15 60);
-  --warning-foreground: oklch(0.15 0.02 60);
+.auth0-universal[data-theme='minimal'] .travel0-card-action {
+  min-inline-size: 8rem;
+}
+
+.auth0-universal[data-theme='minimal'] .travel0-action-primary {
+  border-color: transparent;
+  color: var(--color-primary-foreground);
+  background: var(--color-primary);
+}
+
+.auth0-universal[data-theme='minimal'] .travel0-action-primary:hover:not(:disabled) {
+  border-color: transparent;
+  color: var(--color-primary-foreground);
+  background: color-mix(in oklab, var(--color-primary), var(--color-foreground) 10%);
+}
+
+.auth0-universal[data-theme='minimal'] .travel0-action-secondary {
+  border-color: transparent;
+  color: var(--color-secondary-foreground);
+  background: var(--color-secondary);
+}
+
+.auth0-universal[data-theme='minimal'] .travel0-action-secondary:hover:not(:disabled) {
+  border-color: transparent;
+  color: var(--color-secondary-foreground);
+  background: color-mix(in oklab, var(--color-secondary), var(--color-foreground) 7%);
+}
+
+.auth0-universal[data-theme='minimal'] .travel0-action[aria-busy='true'] {
+  cursor: progress;
+}
+
+.dark .auth0-universal[data-theme='minimal'] {
+  --auth0-background: #161719;
+  --auth0-foreground: #f6f7f9;
+  --auth0-card: #1c1d20;
+  --auth0-card-foreground: #f6f7f9;
+  --auth0-primary: #7382ff;
+  --auth0-primary-foreground: #101116;
+  --auth0-secondary: #34373d;
+  --auth0-secondary-foreground: #f6f7f9;
+  --auth0-accent: #2d3035;
+  --auth0-accent-foreground: #f6f7f9;
+  --auth0-muted: #25272b;
+  --auth0-muted-foreground: #b7bac1;
+  --auth0-border: #6d7179;
+  --auth0-ring: #9da8ff;
+  --auth0-popover: #1c1d20;
+  --auth0-popover-foreground: #f6f7f9;
+  --auth0-input: #1c1d20;
+  --color-page: #101114;
 }
 
 *,
@@ -134,36 +141,49 @@
 }
 
 html,
+body,
+#root {
+  min-width: 0;
+  min-height: 100%;
+}
+
+html {
+  color-scheme: light dark;
+  background: var(--color-background-secondary, var(--color-neutral-2));
+}
+
 body {
   margin: 0;
-  padding: 0;
-  font-family: var(--font-sans);
-  font-size: var(--font-text-md-size);
-  line-height: var(--font-text-md-line-height);
-  color: var(--color-text-primary);
-  background-color: var(--color-background-primary);
-}
-
-h1,
-h2,
-h3,
-h4 {
-  margin: 0 0 var(--spacing-sm);
-  font-weight: var(--font-weight-bold);
-  line-height: var(--font-heading-lg-line-height);
-}
-
-h2 {
-  font-size: var(--font-heading-lg-size);
-}
-
-code,
-pre,
-kbd {
-  font-family: var(--font-mono);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,
-input {
-  font-family: inherit;
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button:not(:disabled),
+[role='button']:not([aria-disabled='true']) {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

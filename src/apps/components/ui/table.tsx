@@ -1,55 +1,103 @@
-import type { HTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from 'react';
+"use client";
 
-import { cn } from '../../lib/utils.ts';
+import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import React from "react";
 
-function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
-  return (
-    <div className="relative w-full overflow-auto">
-      <table className={cn('w-full caption-bottom text-sm', className)} {...props} />
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
+  ({ className, ...props }, ref) => (
+    <div className="shadow-bevel-sm w-full overflow-clip rounded-2xl">
+      <div className="overflow-x-auto">
+        <table ref={ref} className={cn("w-full border-collapse", className)} {...props} />
+      </div>
     </div>
-  );
-}
+  )
+);
+Table.displayName = "Table";
 
-function TableHeader({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className={cn('[&_tr]:border-b', className)} {...props} />;
-}
+const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
+  ({ className, ...props }, ref) => <thead ref={ref} className={cn("bg-muted text-sm", className)} {...props} />
+);
+TableHeader.displayName = "TableHeader";
 
-function TableBody({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {
-  return <tbody className={cn('[&_tr:last-child]:border-0', className)} {...props} />;
-}
+const TableBody = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
+  ({ className, ...props }, ref) => (
+    <tbody ref={ref} className={cn("[&_tr:last-child]:border-0", className)} {...props} />
+  )
+);
+TableBody.displayName = "TableBody";
 
-function TableRow({ className, ...props }: HTMLAttributes<HTMLTableRowElement>) {
-  return (
+const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTMLTableRowElement>>(
+  ({ className, ...props }, ref) => (
     <tr
-      className={cn(
-        'border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted',
-        className,
-      )}
+      ref={ref}
+      className={cn("hover:bg-muted/50 border-border/50 border-b text-sm transition-colors", className)}
       {...props}
     />
-  );
+  )
+);
+TableRow.displayName = "TableRow";
+
+interface TableHeadProps extends React.ThHTMLAttributes<HTMLTableCellElement> {
+  isSortable?: boolean;
+  sortDirection?: "asc" | "desc" | false;
 }
 
-function TableHead({ className, ...props }: ThHTMLAttributes<HTMLTableCellElement>) {
-  return (
+const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
+  ({ className, children, isSortable, sortDirection, ...props }, ref) => (
     <th
+      ref={ref}
       className={cn(
-        'text-muted-foreground h-10 px-4 text-left align-middle font-medium',
-        className,
+        "hover:bg-accent/10 border-border/50 border-b px-4 py-2 text-left",
+        isSortable && "select-none",
+        className
       )}
       {...props}
-    />
-  );
+    >
+      <div className="flex items-center gap-1">
+        {children}
+        {isSortable && (
+          <div className="ml-2 flex items-center">
+            {sortDirection === false && (
+              <Button variant="ghost" size="sm" className="px-0.5 py-1">
+                <ChevronUpIcon className="text-muted-foreground h-4 w-4" />
+              </Button>
+            )}
+            {sortDirection === "asc" && (
+              <Button variant="ghost" size="sm" className="px-0.5 py-1">
+                <ChevronUpIcon className="h-4 w-4" />
+              </Button>
+            )}
+            {sortDirection === "desc" && (
+              <Button variant="ghost" size="sm" className="px-0.5 py-1">
+                <ChevronDownIcon className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+    </th>
+  )
+);
+TableHead.displayName = "TableHead";
+
+const TableCell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttributes<HTMLTableCellElement>>(
+  ({ className, ...props }, ref) => <td ref={ref} className={cn("px-4 py-2", className)} {...props} />
+);
+TableCell.displayName = "TableCell";
+
+export interface TableColumn<T> {
+  header: string;
+  accessor: keyof T;
+  sortable?: boolean;
 }
 
-function TableCell({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>) {
-  return <td className={cn('p-4 align-middle', className)} {...props} />;
+export interface DataTableProps<T> {
+  data: T[];
+  columns: TableColumn<T>[];
+  className?: string;
 }
 
-function TableCaption({ className, ...props }: HTMLAttributes<HTMLTableCaptionElement>) {
-  return (
-    <caption className={cn('text-muted-foreground mt-4 text-sm', className)} {...props} />
-  );
-}
-
-export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption };
+export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell };

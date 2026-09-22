@@ -99,6 +99,10 @@
       "PUBLIC_BASE_URL": {
         "description": "Optional external public MCP origin override, for example https://mcp.example.com. Leave empty for the installed Webtask URL.",
         "required": false
+      },
+      "CONNECTED_ACCOUNTS_URL": {
+        "description": "Approved Auth0 Connected Accounts URL for the Google Calendar demo flow.",
+        "required": false
       }
     }
   }

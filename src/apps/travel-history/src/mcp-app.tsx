@@ -1,15 +1,17 @@
-import type {
-  McpUiHostContextChangedNotification,
-  McpUiToolResultNotification,
-} from '@modelcontextprotocol/ext-apps';
-import { applyDocumentTheme, useApp } from '@modelcontextprotocol/ext-apps/react';
+import type { McpUiToolResultNotification } from '@modelcontextprotocol/ext-apps';
+import { useApp, useHostStyles } from '@modelcontextprotocol/ext-apps/react';
 import { ArrowLeft, CalendarDays, Hotel, Plane, ReceiptText, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { parseBookings } from './state.ts';
+import type { Invoice, TripBooking } from '../../../toolkits/history/types.ts';
+import { LoadingState } from '../../components/loading-state.tsx';
+import { UdsThemeBridge } from '../../components/uds-theme-bridge.tsx';
+import { Alert, AlertDescription } from '../../components/ui/alert.tsx';
 import { Badge } from '../../components/ui/badge.tsx';
 import { Button } from '../../components/ui/button.tsx';
-import { Separator } from '../../components/ui/separator.tsx';
+import { Spinner } from '../../components/ui/spinner.tsx';
 import {
   Table,
   TableBody,
@@ -19,15 +21,12 @@ import {
   TableRow,
 } from '../../components/ui/table.tsx';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs.tsx';
-import { Spinner, SpinnerPage } from '../../components/ui/spinner.tsx';
-import type { Invoice, TripBooking } from '../../../toolkits/history/types.ts';
-import { parseBookings } from './state.ts';
 import '../../global.css';
 
 type View = { type: 'list' } | { type: 'detail'; bookingId: string };
 
 function statusVariant(status: TripBooking['status']) {
-  if (status === 'upcoming') return 'upcoming' as const;
+  if (status === 'upcoming') return 'info' as const;
   if (status === 'completed') return 'success' as const;
   return 'secondary' as const;
 }
@@ -54,7 +53,7 @@ function InvoiceDetail({
   onBack: () => void;
 }) {
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-5 rounded-4xl bg-page p-4">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" onClick={onBack} className="h-7 px-2 -ml-2">
           <ArrowLeft className="h-4 w-4 mr-1" />
@@ -91,34 +90,30 @@ function InvoiceDetail({
         </div>
       </div>
 
-      <Separator />
-
-      {loading && <div className="py-2"><Spinner size="sm" /></div>}
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {loading && <div className="flex items-center gap-2 pt-2"><Spinner size="sm" /><span className="text-sm text-muted-foreground">Loading invoice</span></div>}
+      {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
 
       {invoice && !loading && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <section className="space-y-4 pt-2" aria-label="Invoice">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-muted-foreground">
             <span className="font-mono">{invoice.invoiceNumber}</span>
             <span>{invoice.paymentMethod}</span>
           </div>
 
-          <div className="space-y-2">
+          <dl className="space-y-3">
             {invoice.lineItems.map((item, i) => (
               <div key={i} className="flex items-start justify-between gap-3 text-sm">
-                <span className="text-muted-foreground flex-1 leading-snug">{item.description}</span>
-                <span className="tabular-nums shrink-0 font-medium">
+                <dt className="flex-1 leading-snug text-muted-foreground">{item.description}</dt>
+                <dd className="shrink-0 font-medium tabular-nums">
                   {invoice.currency} {item.amount.toFixed(2)}
-                </span>
+                </dd>
               </div>
             ))}
-          </div>
+          </dl>
 
-          <Separator />
-
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pt-1">
             <span className="text-sm font-semibold">Total</span>
-            <span className="text-primary font-bold text-base tabular-nums">
+            <span className="text-base font-bold text-primary tabular-nums">
               {invoice.currency} {invoice.total.toFixed(2)}
             </span>
           </div>
@@ -126,7 +121,7 @@ function InvoiceDetail({
           <p className="text-xs text-muted-foreground">
             Issued {formatDate(invoice.issuedAt)} · {invoice.status.toUpperCase()}
           </p>
-        </div>
+        </section>
       )}
     </div>
   );
@@ -206,17 +201,12 @@ function App() {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [invoiceError, setInvoiceError] = useState<string | null>(null);
+  const invoiceRequestRef = useRef(0);
 
   const { app, isConnected, error } = useApp({
     appInfo: { name: 'travel-history', version: '1.0.0' },
     capabilities: {},
     onAppCreated: (a) => {
-      a.onhostcontextchanged = (
-        notification: McpUiHostContextChangedNotification['params'],
-      ) => {
-        if (notification.theme) applyDocumentTheme(notification.theme);
-      };
-
       a.ontoolresult = (params: McpUiToolResultNotification['params']) => {
         if (params.isError) {
           setBookings(null);
@@ -236,9 +226,12 @@ function App() {
       };
     },
   });
+  useHostStyles(app, app?.getHostContext());
 
   async function openDetail(booking: TripBooking) {
     if (!app) return;
+    const requestId = invoiceRequestRef.current + 1;
+    invoiceRequestRef.current = requestId;
     setInvoice(null);
     setInvoiceError(null);
     setInvoiceLoading(true);
@@ -248,42 +241,56 @@ function App() {
         name: 'get_invoice',
         arguments: { bookingId: booking.bookingId },
       });
-      setInvoice(result.structuredContent as Invoice);
+      if (invoiceRequestRef.current === requestId) {
+        setInvoice(result.structuredContent as Invoice);
+      }
     } catch (err) {
-      setInvoiceError(err instanceof Error ? err.message : String(err));
+      if (invoiceRequestRef.current === requestId) {
+        setInvoiceError(err instanceof Error ? err.message : String(err));
+      }
     } finally {
-      setInvoiceLoading(false);
+      if (invoiceRequestRef.current === requestId) {
+        setInvoiceLoading(false);
+      }
     }
   }
 
   function backToList() {
+    invoiceRequestRef.current += 1;
     setView({ type: 'list' });
     setInvoice(null);
+    setInvoiceLoading(false);
     setInvoiceError(null);
   }
 
+  useEffect(() => {
+    if (view.type === 'detail' && bookings !== null
+      && !bookings.some((booking) => booking.bookingId === view.bookingId)) {
+      invoiceRequestRef.current += 1;
+      setView({ type: 'list' });
+      setInvoice(null);
+      setInvoiceLoading(false);
+      setInvoiceError(null);
+    }
+  }, [bookings, view]);
+
   if (error) {
-    return (
-      <div className="flex h-full items-center justify-center p-6">
-        <p className="text-sm text-destructive">Connection error: {error.message}</p>
-      </div>
-    );
+    return <div className="p-4"><Alert variant="destructive"><AlertDescription>Connection error: {error.message}</AlertDescription></Alert></div>;
   }
 
   if (loadError) {
-    return (
-      <div className="flex h-full items-center justify-center p-6">
-        <p className="text-sm text-destructive" role="alert">{loadError}</p>
-      </div>
-    );
+    return <div className="p-4"><Alert variant="destructive"><AlertDescription>{loadError}</AlertDescription></Alert></div>;
   }
 
   if (!isConnected || bookings === null) {
-    return <SpinnerPage />;
+    return <div className="bg-page p-4"><LoadingState label="Loading your trips" /></div>;
   }
 
   if (view.type === 'detail') {
-    const booking = bookings.find((b) => b.bookingId === view.bookingId)!;
+    const booking = bookings.find((candidate) => candidate.bookingId === view.bookingId);
+    if (!booking) {
+      return <LoadingState />;
+    }
     return (
       <InvoiceDetail
         booking={booking}
@@ -299,9 +306,9 @@ function App() {
   const completed = bookings.filter((b) => b.status === 'completed');
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-5 rounded-4xl bg-page p-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-foreground">My trips</h2>
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">My trips</h2>
         <span className="text-xs text-muted-foreground">
           {bookings.length} booking{bookings.length === 1 ? '' : 's'} · click any row for invoice
         </span>
@@ -335,4 +342,9 @@ function App() {
   );
 }
 
-createRoot(document.getElementById('root')!).render(<App />);
+createRoot(document.getElementById('root')!).render(
+  <div className="auth0-universal" data-theme="minimal">
+    <UdsThemeBridge />
+    <App />
+  </div>,
+);
